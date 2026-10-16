@@ -26,9 +26,9 @@
     
     <div id="ui">
         <div class="controls">
-            <b>Управление ПК:</b> Клавиши <b>Q</b> (Вверх-Влево), <b>A</b> (Вниз-Влево), <b>P</b> (Вверх-Вправо), <b>L</b> (Вниз-Вправо).<br>
-            <b>Телефон:</b> Нажимай на 4 угла экрана.<br>
-            🔥 <i>Не лови горячую картошку! Пусть падает!</i> 🔥
+            <b>compuQter:</b> keyboard <b>Q</b>, <b>A</b>, <b>P</b>, <b>L</b>.<br>
+            <b>le phone:</b> tap on screen cornerinki pls.<br>
+            🔥 <i>DON TOUSH HOT POTETO U RTARD!!</i> 🔥
         </div>
     </div>
 
@@ -36,39 +36,60 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Загрузка картинок
+    // =====================================
+    // ЗАГРУЗКА КАРТИНОК
+    // =====================================
     const images = {
         catcher: new Image(),
         catcherAngry: new Image(),
         throwerLeft: new Image(),
         throwerRight: new Image()
     };
-    
-    // ПУТИ К ТВОИМ КАРТИНКАМ
     images.catcher.src = 'catcher.png';
     images.catcherAngry.src = 'catcher_angry.png';
     images.throwerLeft.src = 'thrower_left.png';
     images.throwerRight.src = 'thrower_right.png';
 
-    // Состояния игры
-    let playerPos = 1; // 0: Верх-Лево, 1: Низ-Лево, 2: Верх-Право, 3: Низ-Право
+    // =====================================
+    // ЗАГРУЗКА ЗВУКОВ
+    // =====================================
+    const bgMusic = new Audio('music.mp3');
+    bgMusic.loop = true; // Зацикливаем музыку
+    bgMusic.volume = 0.4; // Громкость музыки (от 0.0 до 1.0)
+
+    const screamSound = new Audio('scream.mp3');
+    screamSound.volume = 1.0; // Громкость крика (максимальная)
+
+    let isMusicPlaying = false;
+
+    // Функция для старта музыки (вызывается при первом нажатии)
+    function startMusic() {
+        if (!isMusicPlaying) {
+            bgMusic.play().catch(e => console.log("Ждем взаимодействия для музыки..."));
+            isMusicPlaying = true;
+        }
+    }
+
+    // =====================================
+    // ЛОГИКА ИГРЫ
+    // =====================================
+    let playerPos = 1; 
     let score = 0;
     let lives = 3;
-    let spudinkis = []; // Массив падающей картошки
+    let spudinkis = []; 
     
     let spawnRate = 2000;
     let speed = 0.5;
     let gameOver = false;
     let lastTime = 0;
     let lastSpawn = 0;
-    let angryTimer = 0; // Таймер для красного лица
+    let angryTimer = 0; 
 
-    // Позиции лотков (откуда катится картошка)
     const chutes = [
-        { startX: 120, startY: 100, endX: 300, endY: 180 }, // 0: Верх Лево
-        { startX: 120, startY: 280, endX: 300, endY: 360 }, // 1: Низ Лево
-        { startX: 680, startY: 100, endX: 500, endY: 180 }, // 2: Верх Право
-        { startX: 680, startY: 280, endX: 500, endY: 360 }  // 3: Низ Право
+        { startX: 120, startY: 100, endX: 300, endY: 180 }, 
+        { startX: 120, startY: 280, endX: 300, endY: 360 }, 
+        { startX: 680, startY: 100, endX: 500, endY: 180 }, 
+        { startX: 680, startY: 280, endX: 500, endY: 360 }  
     ];
 
     function drawImage(img, x, y, width, height, fallbackText) {
@@ -84,44 +105,37 @@
     function update(deltaTime, time) {
         if (gameOver) return;
 
-        // Таймер злого лица
         if (angryTimer > 0) angryTimer -= deltaTime;
 
-        // Создание новой картошки
         if (time - lastSpawn > spawnRate) {
-            let isHot = Math.random() < 0.25; // 25% шанс на горячую картошку
-            spudinkis.push({ 
-                pos: Math.floor(Math.random() * 4), 
-                progress: 0,
-                isHot: isHot
-            });
+            let isHot = Math.random() < 0.25; 
+            spudinkis.push({ pos: Math.floor(Math.random() * 4), progress: 0, isHot: isHot });
             lastSpawn = time;
-            if (spawnRate > 600) spawnRate -= 20; // Ускорение игры
+            if (spawnRate > 600) spawnRate -= 20; 
             speed += 0.005;
         }
 
-        // Движение картошки
         for (let i = spudinkis.length - 1; i >= 0; i--) {
             let s = spudinkis[i];
             s.progress += speed * deltaTime * 0.001;
 
             if (s.progress >= 1) {
-                // Картошка достигла конца!
                 if (playerPos === s.pos) {
                     if (s.isHot) {
-                        // Поймал горячую - ПЛОХО
+                        // ПОЙМАЛ ГОРЯЧУЮ КАРТОШКУ
                         lives--;
-                        angryTimer = 1500; // Злое лицо на 1.5 секунды
+                        angryTimer = 1500; 
+                        
+                        // ВОСПРОИЗВОДИМ КРИК
+                        screamSound.currentTime = 0; // перематываем в начало, если уже кричит
+                        screamSound.play();
                     } else {
-                        // Поймал обычную - ХОРОШО
                         score++;
                     }
                 } else {
                     if (!s.isHot) {
-                        // Уронил обычную - ПЛОХО
                         lives--;
                     }
-                    // Если уронил горячую - ничего не происходит (молодец, увернулся)
                 }
                 spudinkis.splice(i, 1);
 
@@ -133,11 +147,9 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Рисуем кидающих персонажей
         drawImage(images.throwerLeft, 60, 225, 120, 160, '🧌');
         drawImage(images.throwerRight, 740, 225, 100, 180, '👴');
 
-        // Рисуем лотки (палки)
         ctx.lineWidth = 8;
         ctx.strokeStyle = '#8B4513';
         chutes.forEach(ch => {
@@ -147,9 +159,7 @@
             ctx.stroke();
         });
 
-        // Рисуем главного персонажа (ловца)
         let playerImg = (angryTimer > 0) ? images.catcherAngry : images.catcher;
-        // Немного сдвигаем персонажа в сторону, где он ловит
         let px = 400, py = 260;
         if (playerPos === 0) { px = 350; py = 220; }
         if (playerPos === 1) { px = 350; py = 280; }
@@ -157,40 +167,37 @@
         if (playerPos === 3) { px = 450; py = 280; }
         drawImage(playerImg, px, py, 130, 170, (angryTimer > 0) ? '😡' : '🐸');
 
-        // Рисуем картошку
         ctx.font = "30px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         spudinkis.forEach(s => {
             let ch = chutes[s.pos];
             let x = ch.startX + (ch.endX - ch.startX) * s.progress;
-            let y = ch.startY + (ch.endY - ch.startY) * s.progress - 20; // чуть выше палки
+            let y = ch.startY + (ch.endY - ch.startY) * s.progress - 20; 
             
             if (s.isHot) {
-                ctx.fillText('🔥🥔', x, y); // Горячая картошка
+                ctx.fillText('🔥🥔', x, y); 
             } else {
-                ctx.fillText('🥔', x, y);   // Обычная картошка
+                ctx.fillText('🥔', x, y);   
             }
         });
 
-        // Интерфейс (Очки и Жизни)
         ctx.fillStyle = 'black';
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'left';
         ctx.fillText(`Счет: ${score}`, 20, 40);
         ctx.textAlign = 'right';
-        ctx.fillText(`Жизни: ${'❤️'.repeat(Math.max(0, lives))}`, 780, 40);
+        ctx.fillText(`livinki: ${'❤️'.repeat(Math.max(0, lives))}`, 780, 40);
 
-        // Экран конца игры
         if (gameOver) {
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'white';
             ctx.font = '40px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('ИГРА ОКОНЧЕНА!', 400, 200);
+            ctx.fillText('haha poopedpants!', 400, 200);
             ctx.font = '20px Arial';
-            ctx.fillText('Кликни или нажми пробел, чтобы начать заново', 400, 250);
+            ctx.fillText('tap or qoqspace key to play this crap once MOAR', 400, 250);
             drawImage(images.catcherAngry, 400, 350, 100, 130, '😡');
         }
     }
@@ -207,9 +214,11 @@
         }
     }
 
-    // --- УПРАВЛЕНИЕ ---
-
+    // =====================================
+    // УПРАВЛЕНИЕ
+    // =====================================
     function setPlayerPos(pos) {
+        startMusic(); // Включаем музыку при первом действии
         if (!gameOver) playerPos = pos;
     }
 
@@ -220,7 +229,6 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // Клавиатура
     window.addEventListener('keydown', (e) => {
         let key = e.key.toLowerCase();
         if (gameOver && (key === ' ' || key === 'enter')) resetGame();
@@ -231,12 +239,12 @@
         if (key === 'l' || key === 'д') setPlayerPos(3);
     });
 
-    // Мышь / Тачскрин (для телефона)
     canvas.addEventListener('mousedown', handleTouch);
     canvas.addEventListener('touchstart', handleTouch, {passive: false});
 
     function handleTouch(e) {
-        e.preventDefault(); // чтобы экран не скроллился
+        e.preventDefault(); 
+        startMusic(); // Включаем музыку при тапе/клике
         if (gameOver) {
             resetGame();
             return;
@@ -256,9 +264,7 @@
         if (!isLeft && !isTop) setPlayerPos(3);
     }
 
-    // Старт игры
     images.catcher.onload = () => requestAnimationFrame(gameLoop);
-    // На случай если картинки не прогрузятся (будут эмодзи)
     setTimeout(() => { if(lastTime === 0) requestAnimationFrame(gameLoop); }, 1000);
 
 </script>
